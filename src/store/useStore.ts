@@ -24,6 +24,9 @@ interface AppState {
   searchResults: LayoutNode[];
   cameraTarget: [number, number, number] | null;
 
+  // Code preview state
+  codePreviewMode: "closed" | "normal" | "full"; // closed = hidden, normal = side panel, full = full width
+
   // Actions
   loadSampleProject: () => void;
   loadFiles: (files: Record<string, string>, rootPath?: string) => void;
@@ -34,6 +37,7 @@ interface AppState {
   toggleLabels: () => void;
   search: (query: string) => void;
   flyTo: (building: LayoutNode) => void;
+  setCodePreviewMode: (mode: "closed" | "normal" | "full") => void;
 
   // Timeline actions
   loadHistory: (onProgress?: (msg: string) => void) => Promise<void>;
@@ -65,6 +69,7 @@ export const useStore = create<AppState>((set, get) => ({
   searchQuery: "",
   searchResults: [],
   cameraTarget: null,
+  codePreviewMode: "closed",
 
   loadSampleProject: () => {
     const files = generateSampleCodebase();
@@ -96,10 +101,21 @@ export const useStore = create<AppState>((set, get) => ({
 
   setRepoInfo: (info) => set({ repoInfo: info }),
 
-  selectBuilding: (building) => set({ selectedBuilding: building }),
+  selectBuilding: (building) => {
+    const { files, codePreviewMode } = get();
+    const hasCode = building && files[building.fileNode.path];
+    set({
+      selectedBuilding: building,
+      // Auto-open code preview when selecting a building with code, auto-close when deselecting
+      codePreviewMode: building && hasCode
+        ? (codePreviewMode === "closed" ? "normal" : codePreviewMode)
+        : "closed",
+    });
+  },
   hoverBuilding: (building) => set({ hoveredBuilding: building }),
   toggleEdges: () => set((s) => ({ showEdges: !s.showEdges })),
   toggleLabels: () => set((s) => ({ showLabels: !s.showLabels })),
+  setCodePreviewMode: (mode) => set({ codePreviewMode: mode }),
 
   search: (query) => {
     const layout = get().cityLayout;

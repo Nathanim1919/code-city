@@ -9,31 +9,42 @@ import "./App.css";
 
 export default function App() {
   const cityLayout = useStore((s) => s.cityLayout);
-  const selectedBuilding = useStore((s) => s.selectedBuilding);
-  const files = useStore((s) => s.files);
-  const hasCode = selectedBuilding && files[selectedBuilding.fileNode.path];
+  const codePreviewMode = useStore((s) => s.codePreviewMode);
 
   // Show landing page until a project is loaded
   if (!cityLayout) {
     return <LandingPage />;
   }
 
-  return (
-    <div className="app">
-      <Sidebar />
-      <div className="main">
-        <SearchBar />
-        <CityScene />
-        <Timeline />
+  const layoutClass = [
+    "app",
+    codePreviewMode === "normal" && "app--code-open",
+    codePreviewMode === "full" && "app--code-full",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-        {/* Keyboard shortcuts hint */}
-        <div className="shortcuts-hint">
-          <span>Orbit: Left Click + Drag</span>
-          <span>Pan: Right Click + Drag</span>
-          <span>Zoom: Scroll</span>
+  return (
+    <div className={layoutClass}>
+      {/* Column 1: Sidebar (hidden in full-screen code mode) */}
+      {codePreviewMode !== "full" && <Sidebar />}
+
+      {/* Column 2: 3D City (hidden in full-screen code mode) */}
+      {codePreviewMode !== "full" && (
+        <div className="main">
+          <SearchBar />
+          <CityScene />
+          <Timeline />
+          <div className="shortcuts-hint">
+            <span>Orbit: Left Click + Drag</span>
+            <span>Pan: Right Click + Drag</span>
+            <span>Zoom: Scroll</span>
+          </div>
         </div>
-      </div>
-      {hasCode && <CodePreview />}
+      )}
+
+      {/* Column 3: Code Preview (visible when open or full) */}
+      {codePreviewMode !== "closed" && <CodePreview />}
     </div>
   );
 }
