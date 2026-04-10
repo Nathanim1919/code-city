@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store/useStore";
 import { fetchGitHubRepo } from "../parser/githubFetcher";
+import { AuthButton } from "./AuthButton";
 
 export function LandingPage() {
   const loadFiles = useStore((s) => s.loadFiles);
@@ -54,6 +55,11 @@ export function LandingPage() {
 
   return (
     <div className="landing">
+      {/* Top-right auth button */}
+      <div className="landing-auth">
+        <AuthButton />
+      </div>
+
       <div className="landing-content">
         {/* Hero */}
         <div className="landing-hero">

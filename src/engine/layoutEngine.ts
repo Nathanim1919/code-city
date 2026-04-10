@@ -29,8 +29,8 @@ const LANGUAGE_COLORS: Record<string, string> = {
 };
 
 const DISTRICT_COLORS = [
-  "#1e293b", "#1e3a5f", "#1a3333", "#2d1b4e", "#3b1c1c",
-  "#1c2d1c", "#2e2b1a", "#1c1c3b", "#3b2e1c", "#1c3b2e",
+  "#0d0d0d", "#0f1a12", "#1a0f0f", "#0f0f1a", "#1a1a0f",
+  "#120d1a", "#0d1a1a", "#1a120d", "#0d0d14", "#14120d",
 ];
 
 interface TreemapRect {

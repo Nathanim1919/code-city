@@ -46,14 +46,14 @@ function Scene() {
 
       {/* Environment */}
       <Stars radius={100} depth={50} count={3000} factor={4} fade speed={1} />
-      <fog attach="fog" args={["#0f172a", 30, 120]} />
+      <fog attach="fog" args={["#000000", 30, 120]} />
       <Grid
         position={[centerX, -0.1, centerZ]}
         args={[200, 200]}
         cellSize={2}
-        cellColor="#1e293b"
+        cellColor="#111111"
         sectionSize={10}
-        sectionColor="#1e3a5f"
+        sectionColor="#1a1a1a"
         fadeDistance={80}
         infiniteGrid
       />
@@ -90,7 +90,7 @@ export function CityScene() {
     <Canvas
       camera={{ position: [30, 25, 30], fov: 60, near: 0.1, far: 500 }}
       shadows
-      style={{ background: "#0f172a" }}
+      style={{ background: "#000000" }}
       gl={{ antialias: true }}
     >
       <Scene />

@@ -1,4 +1,5 @@
 import { useStore } from "../store/useStore";
+import { AuthButton } from "./AuthButton";
 import type { LayoutNode } from "../types";
 
 export function Sidebar() {
@@ -13,193 +14,210 @@ export function Sidebar() {
   const building = selectedBuilding || hoveredBuilding;
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <h1 className="logo">
-          <span className="logo-icon">{"</>"}</span> CodeCity
-        </h1>
-        <p className="subtitle">3D Codebase Explorer</p>
-      </div>
-
-      {/* Controls */}
-      <div className="section">
-        <h3 className="section-title">View Controls</h3>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={showEdges}
-            onChange={toggleEdges}
-          />
-          <span>Show Dependencies</span>
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={showLabels}
-            onChange={toggleLabels}
-          />
-          <span>Show Labels</span>
-        </label>
-      </div>
-
-      {/* Stats */}
-      {cityLayout && (
-        <div className="section">
-          <h3 className="section-title">Project Stats</h3>
-          <div className="stat-grid">
-            <StatCard
-              label="Files"
-              value={cityLayout.buildings.length}
-            />
-            <StatCard
-              label="Dependencies"
-              value={cityLayout.edges.length}
-            />
-            <StatCard
-              label="Districts"
-              value={cityLayout.districts.length}
-            />
-            <StatCard
-              label="Total LOC"
-              value={cityLayout.buildings.reduce(
-                (s, b) => s + b.fileNode.loc,
-                0
-              )}
-            />
+    <div className="sb">
+      {/* Brand + auth */}
+      <div className="sb-top">
+        <div className="sb-brand">
+          <span className="sb-brand-icon">{"</>"}</span>
+          <div>
+            <div className="sb-brand-name">CodeCity</div>
+            <div className="sb-brand-tag">3D Codebase Explorer</div>
           </div>
         </div>
-      )}
+        <AuthButton />
+      </div>
 
-      {/* File details */}
-      {building && <BuildingDetails building={building} />}
+      {/* Scrollable content */}
+      <div className="sb-scroll">
+        {/* Project overview */}
+        {cityLayout && (
+          <div className="sb-block">
+            <div className="sb-stats">
+              <Stat value={cityLayout.buildings.length} label="Files" />
+              <Stat value={cityLayout.edges.length} label="Deps" />
+              <Stat value={cityLayout.districts.length} label="Modules" />
+              <Stat
+                value={cityLayout.buildings.reduce((s, b) => s + b.fileNode.loc, 0).toLocaleString()}
+                label="LOC"
+              />
+            </div>
+          </div>
+        )}
 
-      {/* Legend */}
-      <div className="section">
-        <h3 className="section-title">Legend</h3>
-        <div className="legend">
-          <LegendItem color="#3178c6" label="TypeScript" />
-          <LegendItem color="#f7df1e" label="JavaScript" />
-          <LegendItem color="#3776ab" label="Python" />
-          <LegendItem color="#00add8" label="Go" />
-          <LegendItem color="#dea584" label="Rust" />
-          <LegendItem color="#b07219" label="Java" />
+        {/* Selected file */}
+        {building ? (
+          <FileInspector building={building} />
+        ) : (
+          <div className="sb-block">
+            <div className="sb-empty">
+              <span className="sb-empty-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122M5.05 12.95l-2.122 2.122" />
+                </svg>
+              </span>
+              <p>Click or hover a building to inspect it</p>
+            </div>
+          </div>
+        )}
+
+        {/* View toggles */}
+        <div className="sb-block">
+          <div className="sb-label">Display</div>
+          <div className="sb-toggles">
+            <Toggle label="Dependencies" checked={showEdges} onChange={toggleEdges} />
+            <Toggle label="Labels" checked={showLabels} onChange={toggleLabels} />
+          </div>
         </div>
-        <div className="legend-note">
-          <p>Height = complexity</p>
-          <p>Width = lines of code</p>
-          <p>Red top = high complexity</p>
+
+        {/* Language legend */}
+        <div className="sb-block">
+          <div className="sb-label">Languages</div>
+          <div className="sb-langs">
+            <Lang color="#3178c6" name="TypeScript" />
+            <Lang color="#f7df1e" name="JavaScript" />
+            <Lang color="#3776ab" name="Python" />
+            <Lang color="#00add8" name="Go" />
+            <Lang color="#dea584" name="Rust" />
+            <Lang color="#b07219" name="Java" />
+          </div>
+          <div className="sb-mapping">
+            <span>Height = complexity</span>
+            <span>Width = lines of code</span>
+            <span className="sb-mapping-hot">Red cap = high complexity</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function BuildingDetails({ building }: { building: LayoutNode }) {
+/* ── File Inspector ── */
+
+function FileInspector({ building }: { building: LayoutNode }) {
   const cityLayout = useStore((s) => s.cityLayout);
   const flyTo = useStore((s) => s.flyTo);
 
-  // Find connected files
   const connections =
     cityLayout?.edges.filter(
       (e) => e.source.id === building.id || e.target.id === building.id
     ) || [];
 
-  const imports = connections
-    .filter((e) => e.source.id === building.id)
-    .map((e) => e.target);
-  const importedBy = connections
-    .filter((e) => e.target.id === building.id)
-    .map((e) => e.source);
+  const imports = connections.filter((e) => e.source.id === building.id).map((e) => e.target);
+  const importedBy = connections.filter((e) => e.target.id === building.id).map((e) => e.source);
+
+  const lang = building.fileNode.language || "unknown";
 
   return (
-    <div className="section file-details">
-      <h3 className="section-title">File Details</h3>
-      <div className="file-name">{building.fileNode.name}</div>
-      <div className="file-path">{building.fileNode.path}</div>
-
-      <div className="stat-grid">
-        <StatCard label="LOC" value={building.fileNode.loc} />
-        <StatCard label="Complexity" value={building.fileNode.complexity} />
-        <StatCard label="Functions" value={building.fileNode.functions.length} />
-        <StatCard label="Language" value={building.fileNode.language || "?"} small />
+    <div className="sb-block sb-inspector">
+      {/* File header */}
+      <div className="sb-file-header">
+        <div className="sb-file-name">{building.fileNode.name}</div>
+        <div className="sb-file-path">{building.fileNode.path}</div>
       </div>
 
-      {/* Functions list */}
+      {/* Inline metrics */}
+      <div className="sb-metrics">
+        <div className="sb-metric">
+          <span className="sb-metric-val">{building.fileNode.loc}</span>
+          <span className="sb-metric-key">lines</span>
+        </div>
+        <div className="sb-metric-divider" />
+        <div className="sb-metric">
+          <span className="sb-metric-val">{building.fileNode.complexity}</span>
+          <span className="sb-metric-key">complexity</span>
+        </div>
+        <div className="sb-metric-divider" />
+        <div className="sb-metric">
+          <span className="sb-metric-val">{building.fileNode.functions.length}</span>
+          <span className="sb-metric-key">functions</span>
+        </div>
+        <div className="sb-metric-divider" />
+        <div className="sb-metric">
+          <span className="sb-metric-val sb-metric-lang">{lang}</span>
+          <span className="sb-metric-key">lang</span>
+        </div>
+      </div>
+
+      {/* Functions */}
       {building.fileNode.functions.length > 0 && (
-        <div className="subsection">
-          <h4>Functions</h4>
-          <ul className="func-list">
+        <div className="sb-section">
+          <div className="sb-label">Functions</div>
+          <div className="sb-fn-list">
             {building.fileNode.functions.map((fn) => (
-              <li key={fn.id} className="func-item">
-                <span className="func-name">{fn.name}()</span>
-                <span className="func-loc">{fn.loc} lines</span>
-              </li>
+              <div key={fn.id} className="sb-fn">
+                <span className="sb-fn-name">{fn.name}()</span>
+                <span className="sb-fn-meta">{fn.loc}L &middot; C{fn.complexity}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      {/* Imports */}
+      {/* Dependencies */}
       {imports.length > 0 && (
-        <div className="subsection">
-          <h4>Imports ({imports.length})</h4>
-          <ul className="dep-list">
+        <div className="sb-section">
+          <div className="sb-label">
+            Imports <span className="sb-count">{imports.length}</span>
+          </div>
+          <div className="sb-dep-list">
             {imports.map((dep) => (
-              <li
-                key={dep.id}
-                className="dep-item"
-                onClick={() => flyTo(dep)}
-              >
+              <button key={dep.id} className="sb-dep" onClick={() => flyTo(dep)}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M7 17l9.2-9.2M17 17V7H7" />
+                </svg>
                 {dep.fileNode.name}
-              </li>
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      {/* Imported by */}
       {importedBy.length > 0 && (
-        <div className="subsection">
-          <h4>Imported By ({importedBy.length})</h4>
-          <ul className="dep-list">
+        <div className="sb-section">
+          <div className="sb-label">
+            Imported by <span className="sb-count">{importedBy.length}</span>
+          </div>
+          <div className="sb-dep-list">
             {importedBy.map((dep) => (
-              <li
-                key={dep.id}
-                className="dep-item"
-                onClick={() => flyTo(dep)}
-              >
+              <button key={dep.id} className="sb-dep" onClick={() => flyTo(dep)}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 7l-9.2 9.2M7 7v10h10" />
+                </svg>
                 {dep.fileNode.name}
-              </li>
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  small,
-}: {
-  label: string;
-  value: number | string;
-  small?: boolean;
-}) {
+/* ── Small components ── */
+
+function Stat({ value, label }: { value: number | string; label: string }) {
   return (
-    <div className="stat-card">
-      <div className={`stat-value ${small ? "small" : ""}`}>{value}</div>
-      <div className="stat-label">{label}</div>
+    <div className="sb-stat">
+      <span className="sb-stat-val">{value}</span>
+      <span className="sb-stat-label">{label}</span>
     </div>
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
   return (
-    <div className="legend-item">
-      <div className="legend-color" style={{ backgroundColor: color }} />
+    <button className={`sb-toggle ${checked ? "sb-toggle--on" : ""}`} onClick={onChange}>
+      <span className="sb-toggle-dot" />
       <span>{label}</span>
+    </button>
+  );
+}
+
+function Lang({ color, name }: { color: string; name: string }) {
+  return (
+    <div className="sb-lang">
+      <span className="sb-lang-dot" style={{ background: color }} />
+      <span>{name}</span>
     </div>
   );
 }
