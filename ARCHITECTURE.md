@@ -131,9 +131,9 @@ src/
 - [x] Sample demo project
 - [x] Dark theme UI with sidebar
 
-### In Progress (v0.2)
-- [ ] **Git history animation** — Watch the city evolve over commits. Buildings rise/appear/change color as the repo grows. Scrub through a timeline.
-- [ ] **Code preview panel** — Click a building → see syntax-highlighted source code in a side panel. Click a function → jump to that line.
+### Completed (v0.2)
+- [x] **Git history animation** — Fetches last 30 commits via GitHub API, builds timeline snapshots tracking file additions/modifications/deletions. Timeline scrubber with play/pause/step controls. Buildings animate (grow/shrink/glow green for added, amber for modified, fade for deleted).
+- [x] **Code preview panel** — Click a building to see syntax-highlighted source code (PrismJS) in a right-side panel. Function jump bar lets you click any function name to scroll to its definition. Shows file stats, language badge, line numbers.
 
 ### Future (v0.3+)
 - [ ] Smooth camera fly-to animations

@@ -932,3 +932,246 @@ canvas {
   color: var(--text-muted);
   line-height: 1.4;
 }
+
+/* ==========================================
+   Code Preview Panel
+   ========================================== */
+
+.code-preview {
+  width: 420px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.code-preview-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.code-preview-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-preview-icon {
+  color: var(--accent);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.code-preview-filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.code-preview-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-preview-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.code-lang-badge {
+  background: var(--bg-primary);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+/* Function jump bar */
+.code-functions-bar {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.code-functions-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.code-functions-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.code-functions-list {
+  display: flex;
+  gap: 4px;
+}
+
+.code-function-btn {
+  background: var(--bg-primary);
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.code-function-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Code body */
+.code-preview-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+.code-preview-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-preview-body::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+}
+
+.code-line-numbers {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  background: var(--bg-secondary);
+  z-index: 1;
+}
+
+.code-line-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+  padding: 0 12px 0 16px;
+  line-height: 20px;
+  height: 20px;
+}
+
+.code-pre {
+  margin: 0;
+  padding: 16px 16px 16px 0;
+  flex: 1;
+  overflow: visible;
+}
+
+.code-pre code {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.75rem !important;
+  line-height: 20px !important;
+  background: none !important;
+  padding: 0 !important;
+}
+
+/* ==========================================
+   Prism Dark Theme (Slate)
+   ========================================== */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #e2e8f0;
+  background: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 20px;
+  tab-size: 2;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #64748b;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #94a3b8;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #f59e0b;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #22c55e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #94a3b8;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #60a5fa;
+}
+
+.token.function,
+.token.class-name {
+  color: #c084fc;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #fb923c;
+}
