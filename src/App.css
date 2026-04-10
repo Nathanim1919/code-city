@@ -430,6 +430,247 @@ canvas {
 }
 
 /* ==========================================
+   Timeline
+   ========================================== */
+
+.timeline-bar {
+  position: absolute;
+  bottom: 50px;
+  left: 16px;
+  right: 16px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 10;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.timeline-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.timeline-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.timeline-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.timeline-btn.play-btn {
+  background: var(--accent);
+  color: #0f172a;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.timeline-btn.play-btn:hover {
+  background: var(--accent-hover);
+  color: #0f172a;
+}
+
+/* Scrubber */
+.timeline-scrubber {
+  flex: 1;
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.timeline-slider {
+  width: 100%;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #0f172a;
+  margin-top: -5px;
+  transition: transform 0.1s;
+}
+
+.timeline-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.timeline-slider::-moz-range-track {
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  border: none;
+}
+
+.timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #0f172a;
+}
+
+.timeline-dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.timeline-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.timeline-dot.past {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.timeline-dot.active {
+  background: var(--accent);
+  opacity: 1;
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* Commit info */
+.timeline-info {
+  flex-shrink: 0;
+  max-width: 260px;
+  min-width: 180px;
+}
+
+.timeline-commit-msg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.timeline-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.timeline-author {
+  color: var(--accent);
+}
+
+.timeline-counter {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.timeline-changes {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.change-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.change-badge.added {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.change-badge.modified {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.change-badge.deleted {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Load history button */
+.timeline-load-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0 auto;
+}
+
+.timeline-load-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.timeline-loading-text {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* ==========================================
    Landing Page
    ========================================== */
 

@@ -5,6 +5,7 @@ import { fetchGitHubRepo } from "../parser/githubFetcher";
 export function LandingPage() {
   const loadFiles = useStore((s) => s.loadFiles);
   const loadSampleProject = useStore((s) => s.loadSampleProject);
+  const setRepoInfo = useStore((s) => s.setRepoInfo);
   const [repoUrl, setRepoUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,6 +37,14 @@ export function LandingPage() {
       }
 
       setProgress(`Loaded ${Object.keys(files).length} files. Building city...`);
+
+      // Save repo info for git history fetching
+      const repoInfo = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`)
+        .then((r) => r.json())
+        .catch(() => null);
+      const branch = parsed.branch || repoInfo?.default_branch || "main";
+      setRepoInfo({ owner: parsed.owner, repo: parsed.repo, branch });
+
       loadFiles(files, `${parsed.owner}/${parsed.repo}`);
     } catch (err: any) {
       setError(err.message || "Failed to fetch repository. Check the URL and try again.");

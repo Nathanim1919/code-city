@@ -145,6 +145,76 @@ async function fetchFileContent(
 }
 
 /**
+ * Fetch commit history for a repo (last N commits with file change info).
+ */
+export async function fetchCommitHistory(
+  owner: string,
+  repo: string,
+  branch: string,
+  maxCommits: number = 30,
+  onProgress?: (msg: string) => void
+): Promise<CommitHistoryItem[]> {
+  onProgress?.("Fetching commit history...");
+
+  // Get list of commits
+  const commits = await githubFetch(
+    `${GITHUB_API}/repos/${owner}/${repo}/commits?sha=${branch}&per_page=${maxCommits}`
+  );
+
+  const history: CommitHistoryItem[] = [];
+
+  // Fetch file changes for each commit (in batches to respect rate limits)
+  const BATCH = 5;
+  for (let i = 0; i < commits.length; i += BATCH) {
+    const batch = commits.slice(i, i + BATCH);
+
+    const results = await Promise.allSettled(
+      batch.map(async (c: any) => {
+        const detail = await githubFetch(
+          `${GITHUB_API}/repos/${owner}/${repo}/commits/${c.sha}`
+        );
+        return {
+          sha: c.sha,
+          message: (c.commit?.message || "").split("\n")[0], // first line only
+          author: c.commit?.author?.name || c.author?.login || "unknown",
+          date: c.commit?.author?.date || "",
+          files: (detail.files || []).map((f: any) => ({
+            path: f.filename,
+            status: f.status as "added" | "modified" | "removed" | "renamed",
+            additions: f.additions || 0,
+            deletions: f.deletions || 0,
+          })),
+        };
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        history.push(r.value);
+      }
+    }
+
+    onProgress?.(`Fetched ${Math.min(i + BATCH, commits.length)}/${commits.length} commits...`);
+  }
+
+  // Reverse so oldest is first (index 0 = earliest commit)
+  return history.reverse();
+}
+
+export interface CommitHistoryItem {
+  sha: string;
+  message: string;
+  author: string;
+  date: string;
+  files: {
+    path: string;
+    status: "added" | "modified" | "removed" | "renamed";
+    additions: number;
+    deletions: number;
+  }[];
+}
+
+/**
  * Fetch from GitHub API with error handling.
  */
 async function githubFetch(url: string): Promise<any> {

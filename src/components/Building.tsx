@@ -9,6 +9,12 @@ interface BuildingProps {
   node: LayoutNode;
 }
 
+const STATE_COLORS: Record<string, string> = {
+  added: "#22c55e",    // green glow for new files
+  modified: "#f59e0b", // amber glow for modified
+  deleted: "#ef4444",  // red for deleted (fading out)
+};
+
 export function Building({ node }: BuildingProps) {
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -17,24 +23,59 @@ export function Building({ node }: BuildingProps) {
   const selectedBuilding = useStore((s) => s.selectedBuilding);
   const showLabels = useStore((s) => s.showLabels);
   const searchResults = useStore((s) => s.searchResults);
+  const buildingState = useStore((s) => s.buildingStates.get(node.id));
+  const timelineLoaded = useStore((s) => s.timeline.isLoaded);
 
   const isSelected = selectedBuilding?.id === node.id;
   const isSearchResult =
     searchResults.length > 0 && searchResults.some((r) => r.id === node.id);
   const isDimmed = searchResults.length > 0 && !isSearchResult;
 
-  // Gentle hover animation
+  // Timeline-driven visibility
+  const isHiddenByTimeline = timelineLoaded && buildingState === "deleted";
+  const timelineColor = buildingState ? STATE_COLORS[buildingState] : undefined;
+
+  // Animate scale and visibility
   useFrame(() => {
     if (!meshRef.current) return;
-    const targetScale = hovered || isSelected ? 1.05 : 1;
-    const currentScale = meshRef.current.scale.x;
-    meshRef.current.scale.setScalar(
-      currentScale + (targetScale - currentScale) * 0.1
-    );
+
+    // Scale animation
+    let targetScaleXZ = hovered || isSelected ? 1.05 : 1;
+    let targetScaleY = 1;
+
+    if (isHiddenByTimeline) {
+      targetScaleXZ = 0;
+      targetScaleY = 0;
+    } else if (timelineLoaded && buildingState === "added") {
+      // Pulse effect for newly added files
+      targetScaleXZ = 1.08;
+      targetScaleY = 1.08;
+    }
+
+    const lerpSpeed = 0.08;
+    const sx = meshRef.current.scale.x + (targetScaleXZ - meshRef.current.scale.x) * lerpSpeed;
+    const sy = meshRef.current.scale.y + (targetScaleY - meshRef.current.scale.y) * lerpSpeed;
+    const sz = meshRef.current.scale.z + (targetScaleXZ - meshRef.current.scale.z) * lerpSpeed;
+    meshRef.current.scale.set(sx, sy, sz);
   });
 
-  const emissiveIntensity = isSelected ? 0.4 : hovered ? 0.2 : isSearchResult ? 0.3 : 0;
-  const opacity = isDimmed ? 0.2 : 1;
+  const emissiveColor = timelineColor
+    ? timelineColor
+    : isSelected
+    ? "#ffffff"
+    : node.color;
+
+  const emissiveIntensity = timelineColor
+    ? 0.6
+    : isSelected
+    ? 0.4
+    : hovered
+    ? 0.2
+    : isSearchResult
+    ? 0.3
+    : 0;
+
+  const opacity = isDimmed ? 0.2 : isHiddenByTimeline ? 0 : 1;
 
   return (
     <group position={[node.x, node.y, node.z]}>
@@ -62,9 +103,9 @@ export function Building({ node }: BuildingProps) {
       >
         <meshStandardMaterial
           color={node.color}
-          emissive={isSelected ? "#ffffff" : node.color}
+          emissive={emissiveColor}
           emissiveIntensity={emissiveIntensity}
-          transparent={isDimmed}
+          transparent
           opacity={opacity}
           metalness={0.3}
           roughness={0.7}
@@ -72,7 +113,7 @@ export function Building({ node }: BuildingProps) {
       </RoundedBox>
 
       {/* Building label */}
-      {showLabels && (hovered || isSelected) && (
+      {showLabels && (hovered || isSelected) && !isHiddenByTimeline && (
         <Text
           position={[0, node.height / 2 + 0.8, 0]}
           fontSize={0.5}
@@ -87,7 +128,7 @@ export function Building({ node }: BuildingProps) {
       )}
 
       {/* Complexity indicator - glowing top for complex files */}
-      {node.fileNode.complexity > 15 && (
+      {node.fileNode.complexity > 15 && !isHiddenByTimeline && (
         <mesh position={[0, node.height / 2 + 0.1, 0]}>
           <boxGeometry args={[node.width * 0.9, 0.15, node.depth * 0.9]} />
           <meshStandardMaterial
@@ -96,6 +137,24 @@ export function Building({ node }: BuildingProps) {
             emissiveIntensity={0.8}
             transparent
             opacity={0.7}
+          />
+        </mesh>
+      )}
+
+      {/* Timeline state indicator ring */}
+      {timelineColor && !isHiddenByTimeline && (
+        <mesh position={[0, -node.height / 2 + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[
+            Math.max(node.width, node.depth) * 0.6,
+            Math.max(node.width, node.depth) * 0.75,
+            32
+          ]} />
+          <meshStandardMaterial
+            color={timelineColor}
+            emissive={timelineColor}
+            emissiveIntensity={1}
+            transparent
+            opacity={0.6}
           />
         </mesh>
       )}

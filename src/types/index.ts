@@ -73,3 +73,29 @@ export interface District {
   color: string;
   children: string[]; // building IDs
 }
+
+// Git history types
+export interface CommitInfo {
+  sha: string;
+  message: string;
+  author: string;
+  date: string; // ISO date string
+  filesChanged: string[]; // paths added/modified
+  filesDeleted: string[]; // paths removed
+}
+
+export interface HistorySnapshot {
+  commitIndex: number;
+  commit: CommitInfo;
+  filePaths: Set<string>; // all files that exist at this point
+  fileChanges: Map<string, "added" | "modified" | "deleted">;
+}
+
+export interface TimelineState {
+  commits: CommitInfo[];
+  snapshots: HistorySnapshot[];
+  currentIndex: number;
+  isPlaying: boolean;
+  isLoaded: boolean;
+  isLoading: boolean;
+}

@@ -1,6 +1,7 @@
 import { CityScene } from "./components/CityScene";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
+import { Timeline } from "./components/Timeline";
 import { LandingPage } from "./components/LandingPage";
 import { useStore } from "./store/useStore";
 import "./App.css";
@@ -19,6 +20,7 @@ export default function App() {
       <div className="main">
         <SearchBar />
         <CityScene />
+        <Timeline />
 
         {/* Keyboard shortcuts hint */}
         <div className="shortcuts-hint">
