@@ -4,6 +4,22 @@ import { parseCodebase, generateSampleCodebase } from "../parser/codeParser";
 import { computeLayout } from "../engine/layoutEngine";
 import { fetchCommitHistory, type CommitHistoryItem } from "../parser/githubFetcher";
 
+export interface SavedRepoItem {
+  id: string;
+  owner: string;
+  repo: string;
+  branch: string;
+  displayMeta?: {
+    description?: string;
+    language?: string;
+    stars?: number;
+    fileCount?: number;
+    loc?: number;
+  } | null;
+  addedAt: string;
+  lastOpenedAt: string;
+}
+
 export interface GitHubRepoItem {
   id: number;
   full_name: string;
@@ -30,6 +46,10 @@ interface AppState {
   // User's GitHub repos cache
   userRepos: GitHubRepoItem[];
   userReposLoaded: boolean;
+
+  // Saved repos (non-owned)
+  savedRepos: SavedRepoItem[];
+  savedReposLoaded: boolean;
 
   // Branch data
   branches: string[];
@@ -61,6 +81,11 @@ interface AppState {
 
   // User repos actions
   fetchUserRepos: (force?: boolean) => Promise<void>;
+
+  // Saved repos actions
+  fetchSavedRepos: (force?: boolean) => Promise<void>;
+  saveRepo: (owner: string, repo: string, branch: string, displayMeta?: SavedRepoItem["displayMeta"]) => Promise<void>;
+  deleteSavedRepo: (id: string) => Promise<void>;
 
   // Branch actions
   fetchBranches: () => Promise<void>;
@@ -101,6 +126,9 @@ export const useStore = create<AppState>((set, get) => ({
   userRepos: [],
   userReposLoaded: false,
 
+  savedRepos: [],
+  savedReposLoaded: false,
+
   branches: [],
   branchesLoaded: false,
 
@@ -140,6 +168,48 @@ export const useStore = create<AppState>((set, get) => ({
       set({ userRepos: data, userReposLoaded: true });
     } catch {
       // Silently fail — popup will show empty state
+    }
+  },
+
+  fetchSavedRepos: async (force = false) => {
+    if (!force && get().savedReposLoaded) return;
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    try {
+      const res = await fetch(`${apiBase}/api/saved-repos`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch saved repos");
+      const data = await res.json();
+      set({ savedRepos: data, savedReposLoaded: true });
+    } catch {
+      // Silently fail
+    }
+  },
+
+  saveRepo: async (owner, repo, branch, displayMeta) => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    try {
+      await fetch(`${apiBase}/api/saved-repos`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo, branch, displayMeta }),
+      });
+      // Refresh the list
+      get().fetchSavedRepos(true);
+    } catch {
+      // Silently fail
+    }
+  },
+
+  deleteSavedRepo: async (id) => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    try {
+      await fetch(`${apiBase}/api/saved-repos/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      set((s) => ({ savedRepos: s.savedRepos.filter((r) => r.id !== id) }));
+    } catch {
+      // Silently fail
     }
   },
 

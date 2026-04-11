@@ -7,10 +7,10 @@ export function SearchBar() {
   const flyTo = useStore((s) => s.flyTo);
 
   return (
-    <div className="search-container">
-      <div className="search-bar">
+    <div className="absolute top-4 left-4 z-10 w-80">
+      <div className="flex items-center bg-bg-secondary border border-bg-tertiary rounded-[10px] px-3.5 backdrop-blur-[10px] transition-[border-color] duration-200 focus-within:border-accent">
         <svg
-          className="search-icon"
+          className="text-text-muted shrink-0"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -26,10 +26,13 @@ export function SearchBar() {
           placeholder="Search files, functions..."
           value={searchQuery}
           onChange={(e) => search(e.target.value)}
-          className="search-input"
+          className="flex-1 bg-transparent border-none outline-none text-text-primary font-mono text-[0.85rem] p-2.5 placeholder:text-text-muted"
         />
         {searchQuery && (
-          <button className="search-clear" onClick={() => search("")}>
+          <button
+            className="bg-transparent border-none text-text-muted cursor-pointer text-[0.9rem] py-1 px-2 rounded hover:bg-bg-tertiary hover:text-text-primary"
+            onClick={() => search("")}
+          >
             x
           </button>
         )}
@@ -37,18 +40,18 @@ export function SearchBar() {
 
       {/* Search results dropdown */}
       {searchResults.length > 0 && searchQuery && (
-        <div className="search-results">
+        <div className="mt-1 bg-bg-secondary border border-bg-tertiary rounded-[10px] overflow-hidden">
           {searchResults.slice(0, 8).map((result) => (
             <div
               key={result.id}
-              className="search-result-item"
+              className="py-2.5 px-3.5 cursor-pointer transition-[background] duration-150 flex flex-col gap-0.5 hover:bg-bg-tertiary"
               onClick={() => {
                 flyTo(result);
                 search("");
               }}
             >
-              <span className="result-name">{result.fileNode.name}</span>
-              <span className="result-path">{result.fileNode.path}</span>
+              <span className="font-mono text-[0.85rem] text-text-primary">{result.fileNode.name}</span>
+              <span className="font-mono text-[0.65rem] text-text-muted">{result.fileNode.path}</span>
             </div>
           ))}
         </div>

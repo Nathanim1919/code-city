@@ -5,8 +5,9 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { serve } from "@hono/node-server";
 import { auth } from "./auth.js";
 import { db } from "./db/index.js";
-import { accounts } from "./db/schema.js";
-import { eq } from "drizzle-orm";
+import { accounts, savedRepos } from "./db/schema.js";
+import { eq, and, desc } from "drizzle-orm";
+import { nanoid } from "nanoid";
 
 const app = new Hono();
 
@@ -69,6 +70,82 @@ app.get("/api/github/repos", async (c) => {
 
   const repos = await res.json();
   return c.json(repos);
+});
+
+// ── Saved repos CRUD ──
+
+// GET /api/saved-repos — list user's saved repos
+app.get("/api/saved-repos", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: "Unauthorized" }, 401);
+
+  const rows = await db
+    .select()
+    .from(savedRepos)
+    .where(eq(savedRepos.userId, session.user.id))
+    .orderBy(desc(savedRepos.lastOpenedAt));
+
+  return c.json(rows);
+});
+
+// POST /api/saved-repos — save a repo (upsert: if exists, update lastOpenedAt + meta)
+app.post("/api/saved-repos", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: "Unauthorized" }, 401);
+
+  const body = await c.req.json();
+  const { owner, repo, branch, displayMeta } = body;
+
+  if (!owner || !repo) return c.json({ error: "owner and repo required" }, 400);
+
+  // Check if already saved
+  const [existing] = await db
+    .select()
+    .from(savedRepos)
+    .where(
+      and(
+        eq(savedRepos.userId, session.user.id),
+        eq(savedRepos.owner, owner),
+        eq(savedRepos.repo, repo)
+      )
+    )
+    .limit(1);
+
+  if (existing) {
+    // Update lastOpenedAt and meta
+    await db
+      .update(savedRepos)
+      .set({ lastOpenedAt: new Date(), displayMeta: displayMeta ?? existing.displayMeta, branch: branch ?? existing.branch })
+      .where(eq(savedRepos.id, existing.id));
+    return c.json({ ...existing, lastOpenedAt: new Date(), displayMeta: displayMeta ?? existing.displayMeta });
+  }
+
+  const row = {
+    id: nanoid(),
+    userId: session.user.id,
+    owner,
+    repo,
+    branch: branch || "main",
+    displayMeta: displayMeta || null,
+    addedAt: new Date(),
+    lastOpenedAt: new Date(),
+  };
+
+  await db.insert(savedRepos).values(row);
+  return c.json(row, 201);
+});
+
+// DELETE /api/saved-repos/:id — remove a saved repo
+app.delete("/api/saved-repos/:id", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: "Unauthorized" }, 401);
+
+  const id = c.req.param("id");
+  await db
+    .delete(savedRepos)
+    .where(and(eq(savedRepos.id, id), eq(savedRepos.userId, session.user.id)));
+
+  return c.json({ ok: true });
 });
 
 // Start server

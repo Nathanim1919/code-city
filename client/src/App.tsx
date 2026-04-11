@@ -6,7 +6,6 @@ import { Timeline } from "./components/Timeline";
 import { CodePreview } from "./components/CodePreview";
 import { CanvasToolbar } from "./components/CanvasToolbar";
 import { useStore } from "./store/useStore";
-import "./App.css";
 
 export default function App() {
   const cityLayout = useStore((s) => s.cityLayout);

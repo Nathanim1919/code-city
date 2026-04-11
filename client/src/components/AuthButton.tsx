@@ -5,32 +5,47 @@ export function AuthButton() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <div className="sb-bottom-loading" />;
+    return <div className="h-9 bg-bg-primary rounded-lg animate-pulse" />;
   }
 
   if (session?.user) {
     return (
-      <div className="sb-bottom-user-wrap">
-        <div className="sb-bottom-user">
-          <div className="sb-bottom-profile">
+      <div className="relative">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 p-1 -m-1 rounded-lg">
             {session.user.image ? (
-              <img src={session.user.image} alt={session.user.name} className="sb-bottom-avatar" />
+              <img
+                src={session.user.image}
+                alt={session.user.name}
+                className="w-[30px] h-[30px] rounded-full object-cover shrink-0"
+              />
             ) : (
-              <div className="sb-bottom-avatar sb-bottom-avatar--fallback">
+              <div className="w-[30px] h-[30px] rounded-full shrink-0 bg-accent text-[#0f172a] flex items-center justify-center font-bold text-[0.8rem]">
                 {session.user.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="sb-bottom-info">
-              <span className="sb-bottom-name">{session.user.name}</span>
-              <span className="sb-bottom-email">{session.user.email}</span>
+            <div className="flex flex-col min-w-0 flex-1 text-left">
+              <span className="text-[0.78rem] font-semibold text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
+                {session.user.name}
+              </span>
+              <span className="text-[0.62rem] text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">
+                {session.user.email}
+              </span>
             </div>
           </div>
           <button
-            className="sb-bottom-logout"
+            className="shrink-0 w-[30px] h-[30px] flex items-center justify-center bg-transparent border border-white/6 rounded-lg text-text-muted cursor-pointer transition-all duration-150 hover:text-danger hover:border-danger/30 hover:bg-danger/6"
             onClick={() => authClient.signOut()}
             title="Sign out"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
@@ -43,7 +58,7 @@ export function AuthButton() {
 
   return (
     <button
-      className="sb-bottom-signin"
+      className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#24292e] text-white border border-white/8 rounded-lg cursor-pointer font-sans text-[0.8rem] font-medium transition-all duration-150 hover:bg-[#2f363d] hover:border-white/15"
       onClick={() => {
         const returnTo = getPostAuthCallbackUrl();
         authClient.signIn.social({

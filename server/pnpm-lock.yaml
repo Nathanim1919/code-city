@@ -29,6 +29,9 @@ importers:
       hono:
         specifier: ^4.12.12
         version: 4.12.12
+      nanoid:
+        specifier: ^5.1.7
+        version: 5.1.7
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -985,6 +988,11 @@ packages:
     resolution: {integrity: sha512-3i5pmOiZvMDj00qhrIVbH0AnioVTx22DMP7Vn5At4yJO46iy+FM8Y/g61ltenLVSo3fiO8h8Q3QOFgf/gQ72ww==}
     engines: {node: '>=20.0.0'}
 
+  nanoid@5.1.7:
+    resolution: {integrity: sha512-ua3NDgISf6jdwezAheMOk4mbE1LXjm1DfMUDMuJf4AqxLFK3ccGpgWizwa5YV7Yz9EpXwEaWoRXSb/BnV0t5dQ==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
   nanostores@1.2.0:
     resolution: {integrity: sha512-F0wCzbsH80G7XXo0Jd9/AVQC7ouWY6idUCTnMwW5t/Rv9W8qmO6endavDwg7TNp5GbugwSukFMVZqzPSrSMndg==}
     engines: {node: ^20.0.0 || >=22.0.0}
@@ -1638,6 +1646,8 @@ snapshots:
   jose@6.2.2: {}
 
   kysely@0.28.16: {}
+
+  nanoid@5.1.7: {}
 
   nanostores@1.2.0: {}
 

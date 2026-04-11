@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // ============================================
 // better-auth required tables
@@ -53,6 +53,35 @@ export const verifications = pgTable("verifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// ============================================
+// Saved repos (non-owned repos a user explored)
+// ============================================
+
+export const savedRepos = pgTable(
+  "saved_repos",
+  {
+    id: text("id").primaryKey(), // nanoid
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    branch: text("branch").notNull().default("main"),
+    displayMeta: jsonb("display_meta").$type<{
+      description?: string;
+      language?: string;
+      stars?: number;
+      fileCount?: number;
+      loc?: number;
+    }>(),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+    lastOpenedAt: timestamp("last_opened_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("saved_repos_user_repo_idx").on(table.userId, table.owner, table.repo),
+  ]
+);
 
 // Better Auth’s Drizzle adapter looks up singular model names (user, session, …).
 // Table names in PostgreSQL stay plural; these are aliases for the adapter only.

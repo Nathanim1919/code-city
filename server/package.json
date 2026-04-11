@@ -13,13 +13,14 @@
     "db:push:http": "tsx src/db/push.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
     "@hono/node-server": "^1.19.13",
+    "@neondatabase/serverless": "^0.10.4",
     "@types/node": "^25.6.0",
     "better-auth": "^1.6.2",
     "dotenv": "^17.4.1",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.12",
+    "nanoid": "^5.1.7",
     "postgres": "^3.4.9",
     "typescript": "^6.0.2"
   },
