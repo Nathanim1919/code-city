@@ -5,6 +5,7 @@ import { SearchBar } from "./components/SearchBar";
 import { Timeline } from "./components/Timeline";
 import { CodePreview } from "./components/CodePreview";
 import { HelpButton } from "./components/HelpModal";
+import { CanvasToolbar } from "./components/CanvasToolbar";
 import { useStore } from "./store/useStore";
 import "./App.css";
 
@@ -35,6 +36,7 @@ export default function App() {
       {codePreviewMode !== "full" && (
         <div className="main">
           <SearchBar />
+          <CanvasToolbar />
           <HelpButton />
           <CityScene />
           <Timeline />

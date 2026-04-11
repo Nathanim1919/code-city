@@ -31,6 +31,10 @@ interface AppState {
   userRepos: GitHubRepoItem[];
   userReposLoaded: boolean;
 
+  // Branch data
+  branches: string[];
+  branchesLoaded: boolean;
+
   // UI state
   selectedBuilding: LayoutNode | null;
   hoveredBuilding: LayoutNode | null;
@@ -57,6 +61,10 @@ interface AppState {
 
   // User repos actions
   fetchUserRepos: (force?: boolean) => Promise<void>;
+
+  // Branch actions
+  fetchBranches: () => Promise<void>;
+  switchBranch: (branch: string, onProgress?: (msg: string) => void) => Promise<void>;
 
   // Timeline actions
   loadHistory: (onProgress?: (msg: string) => void) => Promise<void>;
@@ -93,6 +101,35 @@ export const useStore = create<AppState>((set, get) => ({
   userRepos: [],
   userReposLoaded: false,
 
+  branches: [],
+  branchesLoaded: false,
+
+  fetchBranches: async () => {
+    const { repoInfo } = get();
+    if (!repoInfo) return;
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/branches?per_page=100`,
+        { headers: { Accept: "application/vnd.github.v3+json" } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      set({ branches: data.map((b: any) => b.name), branchesLoaded: true });
+    } catch {
+      // silently fail
+    }
+  },
+
+  switchBranch: async (branch, onProgress) => {
+    const { repoInfo } = get();
+    if (!repoInfo) return;
+    onProgress?.("Fetching branch...");
+    const { fetchGitHubRepo } = await import("../parser/githubFetcher");
+    const files = await fetchGitHubRepo(repoInfo.owner, repoInfo.repo, branch, onProgress);
+    set({ repoInfo: { ...repoInfo, branch } });
+    get().loadFiles(files, `${repoInfo.owner}/${repoInfo.repo}`);
+  },
+
   fetchUserRepos: async (force = false) => {
     if (!force && get().userReposLoaded) return;
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
@@ -116,6 +153,8 @@ export const useStore = create<AppState>((set, get) => ({
       files,
       selectedBuilding: null,
       repoInfo: null,
+      branches: [],
+      branchesLoaded: false,
       timeline: { commits: [], snapshots: [], currentIndex: -1, isPlaying: false, isLoaded: false, isLoading: false },
       buildingStates: new Map(),
     });
@@ -129,6 +168,8 @@ export const useStore = create<AppState>((set, get) => ({
       cityLayout: layout,
       files,
       selectedBuilding: null,
+      branches: [],
+      branchesLoaded: false,
       timeline: { commits: [], snapshots: [], currentIndex: -1, isPlaying: false, isLoaded: false, isLoading: false },
       buildingStates: new Map(),
     });

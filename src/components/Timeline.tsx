@@ -6,7 +6,6 @@ export function Timeline() {
   const setTimelineIndex = useStore((s) => s.setTimelineIndex);
   const togglePlayback = useStore((s) => s.togglePlayback);
   const tickPlayback = useStore((s) => s.tickPlayback);
-  const loadHistory = useStore((s) => s.loadHistory);
   const repoInfo = useStore((s) => s.repoInfo);
   const intervalRef = useRef<number | null>(null);
 
@@ -15,7 +14,7 @@ export function Timeline() {
     if (timeline.isPlaying) {
       intervalRef.current = window.setInterval(() => {
         tickPlayback();
-      }, 800); // advance every 800ms
+      }, 800);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -27,40 +26,13 @@ export function Timeline() {
     };
   }, [timeline.isPlaying, tickPlayback]);
 
-  // Not loaded yet — show load button
-  if (!timeline.isLoaded && !timeline.isLoading) {
-    if (!repoInfo) return null; // no repo info = sample project, no history
-
-    return (
-      <div className="timeline-bar">
-        <button className="timeline-load-btn" onClick={() => loadHistory()}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          Load Git History
-        </button>
-      </div>
-    );
-  }
-
-  // Loading
-  if (timeline.isLoading) {
-    return (
-      <div className="timeline-bar">
-        <div className="loading-spinner" style={{ width: 20, height: 20 }} />
-        <span className="timeline-loading-text">Loading history...</span>
-      </div>
-    );
-  }
-
-  if (timeline.commits.length === 0) return null;
+  // Only show the expanded timeline bar when history is loaded
+  if (!repoInfo || !timeline.isLoaded || timeline.commits.length === 0) return null;
 
   const current = timeline.commits[timeline.currentIndex];
   const snapshot = timeline.snapshots[timeline.currentIndex];
   const totalCommits = timeline.commits.length;
 
-  // Count changes in current snapshot
   const added = snapshot ? [...snapshot.fileChanges.values()].filter((v) => v === "added").length : 0;
   const modified = snapshot ? [...snapshot.fileChanges.values()].filter((v) => v === "modified").length : 0;
   const deleted = snapshot ? [...snapshot.fileChanges.values()].filter((v) => v === "deleted").length : 0;
