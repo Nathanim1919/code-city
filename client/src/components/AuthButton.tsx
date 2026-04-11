@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { getPostAuthCallbackUrl } from "../lib/postAuthCallbackUrl";
 import { UserReposPopup } from "./UserReposPopup";
 
 export function AuthButton() {
@@ -52,7 +53,7 @@ export function AuthButton() {
     <button
       className="sb-bottom-signin"
       onClick={() => {
-        const returnTo = import.meta.env.VITE_CLIENT_URL;
+        const returnTo = getPostAuthCallbackUrl();
         authClient.signIn.social({
           provider: "github",
           callbackURL: returnTo,
