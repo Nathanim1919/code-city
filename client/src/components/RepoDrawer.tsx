@@ -123,17 +123,28 @@ export function RepoDrawer({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 z-200 flex items-center justify-center bg-black/70 backdrop-blur-[8px] transition-opacity duration-[250ms] ease-out ${visible ? "opacity-100" : "opacity-0"}`}
+      className={`fixed inset-0 z-200 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-250 ease-out ${visible ? "opacity-100" : "opacity-0"}`}
       onClick={onClose}
     >
       <div
-        className={`w-[90vw] max-w-[560px] h-[80vh] max-h-[700px] bg-bg-secondary border border-white/8 rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-transform duration-[250ms] ease-out ${visible ? "translate-y-0 scale-100" : "translate-y-3 scale-[0.97]"}`}
+        className={`w-[90vw] max-w-[560px] h-[80vh] max-h-[700px] bg-bg-secondary/60 backdrop-blur-sm border border-white/8 shadow-[0_24px_80px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-transform duration-250 ease-out ${visible ? "translate-y-0 scale-100" : "translate-y-3 scale-[0.97]"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between pt-[18px] pb-3.5 px-[22px] shrink-0">
-          <h2 className="text-base font-bold text-text-primary m-0">Repositories</h2>
-          <div className="flex items-center gap-1">
+
+        {/* Tabs */}
+        <div className="flex justify-between items-center border-b border-white/6">
+        <div className="flex items-center gap-1 bg-black">
+          {(["my-repos", "other", "new"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              className={`bg-transparent border-r border-white/6 font-sans text-[0.8rem] font-medium py-2.5 px-4 cursor-pointer transition-all duration-150 ${tab === t ? "text-accent border-b-accent bg-black" : "text-text-muted border-b-transparent hover:text-text-secondary"}`}
+              onClick={() => switchTab(t)}
+            >
+              {t === "my-repos" ? "My Repos" : t === "other" ? "Other" : "New"}
+            </button>
+          ))}
+             </div>
+           <div className="flex items-center gap-1">
             {(tab === "my-repos" || tab === "other") && (
               <button className={`${iconBtn} ${refreshing ? "[&_svg]:animate-spin" : ""}`} onClick={handleRefresh} title="Refresh" disabled={refreshing}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -147,20 +158,7 @@ export function RepoDrawer({ onClose }: { onClose: () => void }) {
               </svg>
             </button>
           </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex px-[22px] border-b border-white/6 shrink-0">
-          {(["my-repos", "other", "new"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              className={`bg-transparent border-none border-b-2 font-sans text-[0.8rem] font-medium py-2.5 px-4 cursor-pointer transition-all duration-150 ${tab === t ? "text-accent border-b-accent" : "text-text-muted border-b-transparent hover:text-text-secondary"}`}
-              onClick={() => switchTab(t)}
-            >
-              {t === "my-repos" ? "My Repos" : t === "other" ? "Other" : "New"}
-            </button>
-          ))}
-        </div>
+          </div>
 
         {/* ── My Repos tab ── */}
         {tab === "my-repos" && (
