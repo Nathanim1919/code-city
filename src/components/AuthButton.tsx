@@ -1,50 +1,61 @@
+import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { UserReposPopup } from "./UserReposPopup";
 
 export function AuthButton() {
   const { data: session, isPending } = authClient.useSession();
+  const [showRepos, setShowRepos] = useState(false);
 
   if (isPending) {
-    return <div className="auth-btn auth-btn--loading" />;
+    return <div className="sb-bottom-loading" />;
   }
 
   if (session?.user) {
-    return <UserMenu user={session.user} />;
+    return (
+      <div className="sb-bottom-user-wrap">
+        {showRepos && <UserReposPopup onClose={() => setShowRepos(false)} />}
+        <div className="sb-bottom-user">
+          <button
+            className="sb-bottom-profile"
+            onClick={() => setShowRepos((v) => !v)}
+            title="View your repositories"
+          >
+            {session.user.image ? (
+              <img src={session.user.image} alt={session.user.name} className="sb-bottom-avatar" />
+            ) : (
+              <div className="sb-bottom-avatar sb-bottom-avatar--fallback">
+                {session.user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="sb-bottom-info">
+              <span className="sb-bottom-name">{session.user.name}</span>
+              <span className="sb-bottom-email">{session.user.email}</span>
+            </div>
+          </button>
+          <button
+            className="sb-bottom-logout"
+            onClick={() => authClient.signOut()}
+            title="Sign out"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <button
-      className="auth-btn auth-btn--signin"
+      className="sb-bottom-signin"
       onClick={() => authClient.signIn.social({ provider: "github" })}
     >
       <GitHubIcon />
       <span>Sign in with GitHub</span>
     </button>
-  );
-}
-
-function UserMenu({ user }: { user: { name: string; image?: string | null; email: string } }) {
-  return (
-    <div className="user-menu">
-      <div className="user-info">
-        {user.image ? (
-          <img src={user.image} alt={user.name} className="user-avatar" />
-        ) : (
-          <div className="user-avatar user-avatar--fallback">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div className="user-details">
-          <span className="user-name">{user.name}</span>
-          <span className="user-email">{user.email}</span>
-        </div>
-      </div>
-      <button
-        className="auth-btn auth-btn--signout"
-        onClick={() => authClient.signOut()}
-      >
-        Sign out
-      </button>
-    </div>
   );
 }
 

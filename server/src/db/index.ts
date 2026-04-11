@@ -11,9 +11,10 @@ if (!connectionString) {
 }
 
 /**
- * Neon TCP (5432) often hits CONNECT_TIMEOUT behind firewalls or strict networks.
- * The Neon serverless driver speaks HTTPS (port 443) and avoids that path.
- * Set DATABASE_USE_NEON_HTTP=0 to force TCP postgres.js anyway.
+ * For `*.neon.tech` we default to `@neondatabase/serverless` (HTTP to Neon’s API on 443).
+ * If you see `fetch failed` / `ConnectTimeoutError` from that path, set
+ * `DATABASE_USE_NEON_HTTP=0` to use `postgres.js` over TCP (5432) instead.
+ * If TCP is blocked instead, keep the default or set `DATABASE_USE_NEON_HTTP=1`.
  */
 function useNeonHttpDriver(url: string): boolean {
   if (process.env.DATABASE_USE_NEON_HTTP === "0") return false;

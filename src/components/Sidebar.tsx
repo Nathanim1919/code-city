@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useStore } from "../store/useStore";
 import { AuthButton } from "./AuthButton";
+import { AddRepoModal } from "./AddRepoModal";
 import type { LayoutNode } from "../types";
 
 export function Sidebar() {
@@ -10,12 +12,13 @@ export function Sidebar() {
   const toggleEdges = useStore((s) => s.toggleEdges);
   const toggleLabels = useStore((s) => s.toggleLabels);
   const cityLayout = useStore((s) => s.cityLayout);
+  const [showAddRepo, setShowAddRepo] = useState(false);
 
   const building = selectedBuilding || hoveredBuilding;
 
   return (
     <div className="sb">
-      {/* Brand + auth */}
+      {/* ── Top: Brand + Add repo (fixed) ── */}
       <div className="sb-top">
         <div className="sb-brand">
           <span className="sb-brand-icon">{"</>"}</span>
@@ -24,10 +27,21 @@ export function Sidebar() {
             <div className="sb-brand-tag">3D Codebase Explorer</div>
           </div>
         </div>
-        <AuthButton />
+        <button
+          className="sb-add-btn"
+          onClick={() => setShowAddRepo(true)}
+          title="Load new repository"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
       </div>
 
-      {/* Scrollable content */}
+      {showAddRepo && <AddRepoModal onClose={() => setShowAddRepo(false)} />}
+
+      {/* ── Middle: Scrollable content ── */}
       <div className="sb-scroll">
         {/* Project overview */}
         {cityLayout && (
@@ -86,6 +100,11 @@ export function Sidebar() {
             <span className="sb-mapping-hot">Red cap = high complexity</span>
           </div>
         </div>
+      </div>
+
+      {/* ── Bottom: Auth (fixed) ── */}
+      <div className="sb-bottom">
+        <AuthButton />
       </div>
     </div>
   );
