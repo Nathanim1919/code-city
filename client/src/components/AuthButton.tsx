@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { authClient } from "../lib/auth-client";
 import { getPostAuthCallbackUrl } from "../lib/postAuthCallbackUrl";
-import { UserReposPopup } from "./UserReposPopup";
 
 export function AuthButton() {
   const { data: session, isPending } = authClient.useSession();
-  const [showRepos, setShowRepos] = useState(false);
 
   if (isPending) {
     return <div className="sb-bottom-loading" />;
@@ -14,13 +11,8 @@ export function AuthButton() {
   if (session?.user) {
     return (
       <div className="sb-bottom-user-wrap">
-        {showRepos && <UserReposPopup onClose={() => setShowRepos(false)} />}
         <div className="sb-bottom-user">
-          <button
-            className="sb-bottom-profile"
-            onClick={() => setShowRepos((v) => !v)}
-            title="View your repositories"
-          >
+          <div className="sb-bottom-profile">
             {session.user.image ? (
               <img src={session.user.image} alt={session.user.name} className="sb-bottom-avatar" />
             ) : (
@@ -32,7 +24,7 @@ export function AuthButton() {
               <span className="sb-bottom-name">{session.user.name}</span>
               <span className="sb-bottom-email">{session.user.email}</span>
             </div>
-          </button>
+          </div>
           <button
             className="sb-bottom-logout"
             onClick={() => authClient.signOut()}

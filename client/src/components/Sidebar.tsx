@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store/useStore";
 import { AuthButton } from "./AuthButton";
-import { AddRepoModal } from "./AddRepoModal";
+import { RepoDrawer } from "./RepoDrawer";
 import type { LayoutNode } from "../types";
 
 export function Sidebar() {
@@ -12,7 +12,7 @@ export function Sidebar() {
   const toggleEdges = useStore((s) => s.toggleEdges);
   const toggleLabels = useStore((s) => s.toggleLabels);
   const cityLayout = useStore((s) => s.cityLayout);
-  const [showAddRepo, setShowAddRepo] = useState(false);
+  const [showRepoDrawer, setShowRepoDrawer] = useState(false);
 
   const building = selectedBuilding || hoveredBuilding;
 
@@ -29,8 +29,8 @@ export function Sidebar() {
         </div>
         <button
           className="sb-add-btn"
-          onClick={() => setShowAddRepo(true)}
-          title="Load new repository"
+          onClick={() => setShowRepoDrawer(true)}
+          title="Add repository"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -39,7 +39,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      {showAddRepo && <AddRepoModal onClose={() => setShowAddRepo(false)} />}
+      {showRepoDrawer && <RepoDrawer onClose={() => setShowRepoDrawer(false)} />}
 
       {/* ── Middle: Scrollable content ── */}
       <div className="sb-scroll">
