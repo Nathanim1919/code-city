@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { serve } from "@hono/node-server";
 import { auth } from "./auth.js";
 import { db } from "./db/index.js";
@@ -60,7 +61,10 @@ app.get("/api/github/repos", async (c) => {
   );
 
   if (!res.ok) {
-    return c.json({ error: "Failed to fetch repos from GitHub" }, res.status);
+    return c.json(
+      { error: "Failed to fetch repos from GitHub" },
+      res.status as ContentfulStatusCode
+    );
   }
 
   const repos = await res.json();
