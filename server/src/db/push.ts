@@ -55,6 +55,19 @@ const statements = [
     "created_at" timestamp NOT NULL DEFAULT now(),
     "updated_at" timestamp NOT NULL DEFAULT now()
   )`,
+
+  `CREATE TABLE IF NOT EXISTS "saved_repos" (
+    "id" text PRIMARY KEY NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "owner" text NOT NULL,
+    "repo" text NOT NULL,
+    "branch" text NOT NULL DEFAULT 'main',
+    "display_meta" jsonb,
+    "added_at" timestamp NOT NULL DEFAULT now(),
+    "last_opened_at" timestamp NOT NULL DEFAULT now()
+  )`,
+
+  `CREATE UNIQUE INDEX IF NOT EXISTS "saved_repos_user_repo_idx" ON "saved_repos" ("user_id", "owner", "repo")`,
 ];
 
 async function push() {
