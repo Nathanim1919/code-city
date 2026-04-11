@@ -51,7 +51,14 @@ export function AuthButton() {
   return (
     <button
       className="sb-bottom-signin"
-      onClick={() => authClient.signIn.social({ provider: "github" })}
+      onClick={() => {
+        const returnTo = import.meta.env.VITE_CLIENT_URL;
+        authClient.signIn.social({
+          provider: "github",
+          callbackURL: returnTo,
+          errorCallbackURL: returnTo,
+        });
+      }}
     >
       <GitHubIcon />
       <span>Sign in with GitHub</span>
