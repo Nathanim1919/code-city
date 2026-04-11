@@ -4,6 +4,18 @@ import { parseCodebase, generateSampleCodebase } from "../parser/codeParser";
 import { computeLayout } from "../engine/layoutEngine";
 import { fetchCommitHistory, type CommitHistoryItem } from "../parser/githubFetcher";
 
+export interface GitHubRepoItem {
+  id: number;
+  full_name: string;
+  name: string;
+  owner: { login: string };
+  description: string | null;
+  language: string | null;
+  stargazers_count: number;
+  updated_at: string;
+  private: boolean;
+}
+
 interface AppState {
   // Data
   codeGraph: CodeGraph | null;
@@ -14,6 +26,10 @@ interface AppState {
   // Timeline / git history
   timeline: TimelineState;
   buildingStates: Map<string, "added" | "modified" | "deleted" | "unchanged">;
+
+  // User's GitHub repos cache
+  userRepos: GitHubRepoItem[];
+  userReposLoaded: boolean;
 
   // UI state
   selectedBuilding: LayoutNode | null;
@@ -38,6 +54,9 @@ interface AppState {
   search: (query: string) => void;
   flyTo: (building: LayoutNode) => void;
   setCodePreviewMode: (mode: "closed" | "normal" | "full") => void;
+
+  // User repos actions
+  fetchUserRepos: (force?: boolean) => Promise<void>;
 
   // Timeline actions
   loadHistory: (onProgress?: (msg: string) => void) => Promise<void>;
@@ -70,6 +89,22 @@ export const useStore = create<AppState>((set, get) => ({
   searchResults: [],
   cameraTarget: null,
   codePreviewMode: "closed",
+
+  userRepos: [],
+  userReposLoaded: false,
+
+  fetchUserRepos: async (force = false) => {
+    if (!force && get().userReposLoaded) return;
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    try {
+      const res = await fetch(`${apiBase}/api/github/repos`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch repos");
+      const data = await res.json();
+      set({ userRepos: data, userReposLoaded: true });
+    } catch {
+      // Silently fail — popup will show empty state
+    }
+  },
 
   loadSampleProject: () => {
     const files = generateSampleCodebase();

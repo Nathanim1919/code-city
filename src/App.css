@@ -1391,6 +1391,13 @@ canvas {
   color: var(--text-primary);
 }
 
+.urp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.urp-refresh,
 .urp-close {
   background: none;
   border: none;
@@ -1404,8 +1411,18 @@ canvas {
   transition: color 0.15s;
 }
 
+.urp-refresh:hover,
 .urp-close:hover {
   color: var(--text-primary);
+}
+
+.urp-refresh--spin svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .urp-search {
