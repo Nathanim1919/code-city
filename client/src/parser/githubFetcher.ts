@@ -2,10 +2,12 @@
  * GitHub Repository Fetcher
  *
  * Uses the GitHub API to fetch a repo's file tree and contents.
- * Works without authentication for public repos (60 requests/hour limit).
+ * When authenticated, proxies through the server for higher rate limits (5000/hour).
+ * Falls back to direct unauthenticated calls (60/hour) when not logged in.
  */
 
 const GITHUB_API = "https://api.github.com";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 const SUPPORTED_EXTENSIONS = new Set([
   "ts", "tsx", "js", "jsx", "py", "go", "rs", "java",
@@ -216,8 +218,30 @@ export interface CommitHistoryItem {
 
 /**
  * Fetch from GitHub API with error handling.
+ * Tries the authenticated server proxy first (5000 req/hour),
+ * falls back to direct unauthenticated calls (60 req/hour).
  */
 async function githubFetch(url: string): Promise<any> {
+  // Try authenticated proxy first
+  try {
+    const proxyRes = await fetch(
+      `${API_BASE}/api/github/proxy?url=${encodeURIComponent(url)}`,
+      { credentials: "include" }
+    );
+    if (proxyRes.ok) {
+      return proxyRes.json();
+    }
+    // 401/400 means not authenticated or no token — fall through to direct
+    if (proxyRes.status !== 401 && proxyRes.status !== 400) {
+      const err = await proxyRes.json().catch(() => ({}));
+      throw new Error(err.error || `GitHub API error: ${proxyRes.status}`);
+    }
+  } catch (e: any) {
+    // Network error reaching proxy — fall through to direct
+    if (e.message && !e.message.includes("fetch")) throw e;
+  }
+
+  // Fallback: direct unauthenticated call
   const response = await fetch(url, {
     headers: {
       Accept: "application/vnd.github.v3+json",
@@ -229,7 +253,7 @@ async function githubFetch(url: string): Promise<any> {
       throw new Error("Repository not found. Make sure it's a public repo and the URL is correct.");
     }
     if (response.status === 403) {
-      throw new Error("GitHub API rate limit exceeded. Try again in a few minutes.");
+      throw new Error("GitHub API rate limit exceeded. Sign in with GitHub for higher limits.");
     }
     throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
   }
