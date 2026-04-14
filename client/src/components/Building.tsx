@@ -27,6 +27,7 @@ export function Building({ node }: BuildingProps) {
   const timelineLoaded = useStore((s) => s.timeline.isLoaded);
 
   const isSelected = selectedBuilding?.id === node.id;
+  const hasSelection = selectedBuilding !== null;
   const isSearchResult =
     searchResults.length > 0 && searchResults.some((r) => r.id === node.id);
   const isDimmed = searchResults.length > 0 && !isSearchResult;
@@ -34,6 +35,9 @@ export function Building({ node }: BuildingProps) {
   // Timeline-driven visibility
   const isHiddenByTimeline = timelineLoaded && buildingState === "deleted";
   const timelineColor = buildingState ? STATE_COLORS[buildingState] : undefined;
+
+  // Non-active buildings go gray when something is selected
+  const isDeemphasized = hasSelection && !isSelected;
 
   // Animate scale and visibility
   useFrame(() => {
@@ -59,23 +63,28 @@ export function Building({ node }: BuildingProps) {
     meshRef.current.scale.set(sx, sy, sz);
   });
 
+  // Selected: own color with a gentle glow. Deemphasized: gray. Normal: own color.
+  const baseColor = isDeemphasized ? "#3a3a3a" : node.color;
+
   const emissiveColor = timelineColor
     ? timelineColor
     : isSelected
-    ? "#ffffff"
+    ? node.color
+    : isDeemphasized
+    ? "#1a1a1a"
     : node.color;
 
   const emissiveIntensity = timelineColor
     ? 0.6
     : isSelected
-    ? 0.4
+    ? 0.5
     : hovered
     ? 0.2
     : isSearchResult
     ? 0.3
     : 0;
 
-  const opacity = isDimmed ? 0.2 : isHiddenByTimeline ? 0 : 1;
+  const opacity = isDimmed ? 0.2 : isHiddenByTimeline ? 0 : isDeemphasized ? 0.6 : 1;
 
   return (
     <group position={[node.x, node.y, node.z]}>
@@ -102,13 +111,13 @@ export function Building({ node }: BuildingProps) {
         }}
       >
         <meshStandardMaterial
-          color={node.color}
+          color={baseColor}
           emissive={emissiveColor}
           emissiveIntensity={emissiveIntensity}
           transparent
           opacity={opacity}
-          metalness={0.3}
-          roughness={0.7}
+          metalness={isDeemphasized ? 0.1 : 0.3}
+          roughness={isDeemphasized ? 0.9 : 0.7}
         />
       </RoundedBox>
 
