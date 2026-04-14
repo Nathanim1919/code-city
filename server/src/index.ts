@@ -72,6 +72,48 @@ app.get("/api/github/repos", async (c) => {
   return c.json(repos);
 });
 
+// ── GitHub API proxy (authenticated) ──
+// Proxies GitHub API requests with the user's stored token for higher rate limits
+
+app.get("/api/github/proxy", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const [account] = await db
+    .select()
+    .from(accounts)
+    .where(eq(accounts.userId, session.user.id))
+    .limit(1);
+
+  if (!account?.accessToken) {
+    return c.json({ error: "No GitHub token found" }, 400);
+  }
+
+  const url = c.req.query("url");
+  if (!url || !url.startsWith("https://api.github.com/")) {
+    return c.json({ error: "Invalid GitHub API URL" }, 400);
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${account.accessToken}`,
+      Accept: "application/vnd.github.v3+json",
+    },
+  });
+
+  if (!res.ok) {
+    return c.json(
+      { error: `GitHub API error: ${res.status}` },
+      res.status as ContentfulStatusCode
+    );
+  }
+
+  const data = await res.json();
+  return c.json(data);
+});
+
 // ── Saved repos CRUD ──
 
 // GET /api/saved-repos — list user's saved repos
