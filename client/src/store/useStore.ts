@@ -62,7 +62,10 @@ interface AppState {
   showLabels: boolean;
   searchQuery: string;
   searchResults: LayoutNode[];
-  cameraTarget: [number, number, number] | null;
+  cameraAnimation: {
+    endPosition: [number, number, number];
+    endTarget: [number, number, number];
+  } | null;
 
   // Code preview state
   codePreviewMode: "closed" | "normal" | "full"; // closed = hidden, normal = side panel, full = full width
@@ -77,6 +80,7 @@ interface AppState {
   toggleLabels: () => void;
   search: (query: string) => void;
   flyTo: (building: LayoutNode) => void;
+  cancelCameraAnimation: () => void;
   setCodePreviewMode: (mode: "closed" | "normal" | "full") => void;
 
   // User repos actions
@@ -120,7 +124,7 @@ export const useStore = create<AppState>((set, get) => ({
   showLabels: true,
   searchQuery: "",
   searchResults: [],
-  cameraTarget: null,
+  cameraAnimation: null,
   codePreviewMode: "closed",
 
   userRepos: [],
@@ -282,11 +286,21 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   flyTo: (building) => {
+    const viewDistance = Math.max(building.height * 2, 10);
+    get().selectBuilding(building);
     set({
-      cameraTarget: [building.x, building.height + 5, building.z + 10],
-      selectedBuilding: building,
+      cameraAnimation: {
+        endPosition: [
+          building.x + viewDistance * 0.5,
+          building.height * 0.5 + viewDistance * 0.4,
+          building.z + viewDistance * 0.5,
+        ],
+        endTarget: [building.x, building.height * 0.3, building.z],
+      },
     });
   },
+
+  cancelCameraAnimation: () => set({ cameraAnimation: null }),
 
   // --- Timeline ---
 

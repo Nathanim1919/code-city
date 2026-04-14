@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, Environment, Grid } from "@react-three/drei";
 import { useStore } from "../store/useStore";
 import { Building } from "./Building";
@@ -8,19 +8,121 @@ import { DependencyEdges } from "./DependencyEdges";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type OrbitControlsType = any;
 
+// --- Camera animation math ---
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function lerpVec3(
+  a: [number, number, number],
+  b: [number, number, number],
+  t: number
+): [number, number, number] {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+interface AnimState {
+  startPosition: [number, number, number];
+  startTarget: [number, number, number];
+  endPosition: [number, number, number];
+  endTarget: [number, number, number];
+  progress: number;
+  duration: number;
+  arcHeight: number;
+}
+
+function CameraAnimator({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsType | null> }) {
+  const animRef = useRef<AnimState | null>(null);
+  const lastAnimId = useRef<object | null>(null);
+
+  useFrame((state, delta) => {
+    const storeAnim = useStore.getState().cameraAnimation;
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    // Detect new animation trigger
+    if (storeAnim && storeAnim !== lastAnimId.current) {
+      lastAnimId.current = storeAnim;
+      const camera = state.camera;
+      const startPos: [number, number, number] = [camera.position.x, camera.position.y, camera.position.z];
+      const startTgt: [number, number, number] = [controls.target.x, controls.target.y, controls.target.z];
+
+      const dx = storeAnim.endPosition[0] - startPos[0];
+      const dy = storeAnim.endPosition[1] - startPos[1];
+      const dz = storeAnim.endPosition[2] - startPos[2];
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      const hdx = storeAnim.endPosition[0] - startPos[0];
+      const hdz = storeAnim.endPosition[2] - startPos[2];
+      const horizontalDist = Math.sqrt(hdx * hdx + hdz * hdz);
+
+      animRef.current = {
+        startPosition: startPos,
+        startTarget: startTgt,
+        endPosition: storeAnim.endPosition,
+        endTarget: storeAnim.endTarget,
+        progress: 0,
+        duration: Math.min(2.2, Math.max(0.6, distance * 0.035)),
+        arcHeight: Math.min(25, Math.max(3, horizontalDist * 0.3)),
+      };
+      return;
+    }
+
+    // No animation running
+    if (!animRef.current || !storeAnim) {
+      animRef.current = null;
+      return;
+    }
+
+    const anim = animRef.current;
+    anim.progress = Math.min(1, anim.progress + delta / anim.duration);
+    const t = easeInOutCubic(anim.progress);
+
+    // Camera position with arc
+    const pos = lerpVec3(anim.startPosition, anim.endPosition, t);
+    const arcOffset = anim.arcHeight * 4 * t * (1 - t);
+    pos[1] += arcOffset;
+
+    // Target — simple lerp
+    const tgt = lerpVec3(anim.startTarget, anim.endTarget, t);
+
+    state.camera.position.set(pos[0], pos[1], pos[2]);
+    controls.target.set(tgt[0], tgt[1], tgt[2]);
+    controls.update();
+
+    // Done
+    if (anim.progress >= 1) {
+      animRef.current = null;
+      lastAnimId.current = null;
+      useStore.setState({ cameraAnimation: null });
+    }
+  });
+
+  // Cancel animation on user interaction
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const handleStart = () => {
+      if (animRef.current) {
+        animRef.current = null;
+        lastAnimId.current = null;
+        useStore.setState({ cameraAnimation: null });
+      }
+    };
+
+    controls.addEventListener("start", handleStart);
+    return () => controls.removeEventListener("start", handleStart);
+  }, [controlsRef]);
+
+  return null;
+}
+
 function Scene() {
   const cityLayout = useStore((s) => s.cityLayout);
   const showEdges = useStore((s) => s.showEdges);
-  const cameraTarget = useStore((s) => s.cameraTarget);
   const controlsRef = useRef<OrbitControlsType>(null);
-
-  // Fly to target when it changes
-  useEffect(() => {
-    if (cameraTarget && controlsRef.current) {
-      const [x, y, z] = cameraTarget;
-      controlsRef.current.target.set(x, 0, z - 10);
-    }
-  }, [cameraTarget]);
 
   if (!cityLayout) return null;
 
@@ -68,6 +170,9 @@ function Scene() {
         enableDamping
         dampingFactor={0.05}
       />
+
+      {/* Camera animator */}
+      <CameraAnimator controlsRef={controlsRef} />
 
       {/* Districts */}
       {cityLayout.districts.map((district) => (
