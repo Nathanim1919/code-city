@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { CityScene } from "./components/CityScene";
 import { LoadingCity } from "./components/LoadingCity";
+import { LandingPage } from "./components/LandingPage";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
 import { Timeline } from "./components/Timeline";
@@ -14,9 +15,11 @@ export default function App() {
   const codePreviewMode = useStore((s) => s.codePreviewMode);
   const repoInfo = useStore((s) => s.repoInfo);
   const repoLoading = useStore((s) => s.repoLoading);
-  const loadSampleProject = useStore((s) => s.loadSampleProject);
+  const showLanding = useStore((s) => s.showLanding);
   const loadFiles = useStore((s) => s.loadFiles);
   const setRepoInfo = useStore((s) => s.setRepoInfo);
+  const dismissLanding = useStore((s) => s.dismissLanding);
+  const setRepoLoading = useStore((s) => s.setRepoLoading);
   const initDone = useRef(false);
 
   // On mount: check URL for ?repo=owner/repo&branch=main
@@ -32,13 +35,24 @@ export default function App() {
       if (match) {
         const [, owner, repo] = match;
         const branch = params.get("branch") || undefined;
+        dismissLanding();
+        setRepoLoading(true, "Loading shared repository...");
         loadRepoFromUrl(owner, repo, branch);
         return;
       }
     }
+  }, []);
 
-    // No URL param — load demo
-    if (!cityLayout) loadSampleProject();
+  // Back button returns to landing page
+  useEffect(() => {
+    const handlePopState = () => {
+      const state = window.history.state;
+      if (!state || !state.view) {
+        useStore.setState({ showLanding: true });
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   // Sync URL when repoInfo changes
@@ -61,20 +75,21 @@ export default function App() {
 
   async function loadRepoFromUrl(owner: string, repo: string, branch?: string) {
     try {
-      const files = await fetchGitHubRepo(owner, repo, branch);
+      const files = await fetchGitHubRepo(owner, repo, branch, (msg) => setRepoLoading(true, msg));
       if (Object.keys(files).length === 0) {
-        loadSampleProject();
+        setRepoLoading(false);
         return;
       }
+      setRepoLoading(true, "Building city...");
       const ghInfo = await fetch(`https://api.github.com/repos/${owner}/${repo}`)
         .then((r) => r.json())
         .catch(() => null);
       const resolvedBranch = branch || ghInfo?.default_branch || "main";
       setRepoInfo({ owner, repo, branch: resolvedBranch });
       loadFiles(files, `${owner}/${repo}`);
+      setRepoLoading(false);
     } catch {
-      // Fallback to demo on error
-      loadSampleProject();
+      setRepoLoading(false);
     }
   }
 
@@ -85,6 +100,11 @@ export default function App() {
   ]
     .filter(Boolean)
     .join(" ");
+
+  // Show landing page when no repo is loaded and not loading
+  if (showLanding && !cityLayout && !repoLoading.active) {
+    return <LandingPage />;
+  }
 
   return (
     <div className={layoutClass}>

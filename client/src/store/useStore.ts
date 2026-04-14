@@ -58,6 +58,9 @@ interface AppState {
   // Repo loading
   repoLoading: { active: boolean; progress: string };
 
+  // Landing
+  showLanding: boolean;
+
   // UI state
   selectedBuilding: LayoutNode | null;
   hoveredBuilding: LayoutNode | null;
@@ -73,6 +76,7 @@ interface AppState {
   codePreviewMode: "closed" | "normal" | "full"; // closed = hidden, normal = side panel, full = full width
 
   // Actions
+  dismissLanding: () => void;
   loadSampleProject: () => void;
   loadFiles: (files: Record<string, string>, rootPath?: string) => void;
   setRepoInfo: (info: { owner: string; repo: string; branch: string }) => void;
@@ -121,6 +125,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
   buildingStates: new Map(),
 
+  showLanding: true,
   repoLoading: { active: false, progress: "" },
 
   selectedBuilding: null,
@@ -220,6 +225,11 @@ export const useStore = create<AppState>((set, get) => ({
     } catch {
       // Silently fail
     }
+  },
+
+  dismissLanding: () => {
+    set({ showLanding: false });
+    window.history.pushState({ view: "city" }, "", window.location.pathname + window.location.search);
   },
 
   loadSampleProject: () => {

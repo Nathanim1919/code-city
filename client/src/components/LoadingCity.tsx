@@ -166,7 +166,7 @@ function ConstructionParticles() {
   );
 }
 
-function LoadingScene() {
+export function LoadingScene() {
   const buildings = useMemo(() => generateBuildings(), []);
 
   return (
