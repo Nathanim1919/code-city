@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, RoundedBox } from "@react-three/drei";
+import { Text, RoundedBox, Edges, Billboard } from "@react-three/drei";
 import type { Mesh } from "three";
 import type { LayoutNode } from "../types";
 import { useStore } from "../store/useStore";
@@ -19,6 +19,7 @@ export function Building({ node }: BuildingProps) {
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const selectBuilding = useStore((s) => s.selectBuilding);
+  const flyTo = useStore((s) => s.flyTo);
   const hoverBuilding = useStore((s) => s.hoverBuilding);
   const selectedBuilding = useStore((s) => s.selectedBuilding);
   const showLabels = useStore((s) => s.showLabels);
@@ -63,15 +64,15 @@ export function Building({ node }: BuildingProps) {
     meshRef.current.scale.set(sx, sy, sz);
   });
 
-  // Selected: own color with a gentle glow. Deemphasized: gray. Normal: own color.
-  const baseColor = isDeemphasized ? "#3a3a3a" : node.color;
+  // Selected: own color with a gentle glow. Deemphasized: muted gray with border. Normal: own color.
+  const baseColor = isDeemphasized ? "#4a4a4a" : node.color;
 
   const emissiveColor = timelineColor
     ? timelineColor
     : isSelected
     ? node.color
     : isDeemphasized
-    ? "#1a1a1a"
+    ? "#2a2a2a"
     : node.color;
 
   const emissiveIntensity = timelineColor
@@ -84,7 +85,7 @@ export function Building({ node }: BuildingProps) {
     ? 0.3
     : 0;
 
-  const opacity = isDimmed ? 0.2 : isHiddenByTimeline ? 0 : isDeemphasized ? 0.6 : 1;
+  const opacity = isDimmed ? 0.2 : isHiddenByTimeline ? 0 : isDeemphasized ? 0.7 : 1;
 
   return (
     <group position={[node.x, node.y, node.z]}>
@@ -107,7 +108,11 @@ export function Building({ node }: BuildingProps) {
         }}
         onClick={(e) => {
           e.stopPropagation();
-          selectBuilding(isSelected ? null : node);
+          if (isSelected) {
+            selectBuilding(null);
+          } else {
+            flyTo(node);
+          }
         }}
       >
         <meshStandardMaterial
@@ -119,21 +124,25 @@ export function Building({ node }: BuildingProps) {
           metalness={isDeemphasized ? 0.1 : 0.3}
           roughness={isDeemphasized ? 0.9 : 0.7}
         />
+        {isDeemphasized && (
+          <Edges threshold={15} color="#666666" linewidth={0.5} />
+        )}
       </RoundedBox>
 
       {/* Building label */}
       {showLabels && (hovered || isSelected) && !isHiddenByTimeline && (
-        <Text
-          position={[0, node.height / 2 + 0.8, 0]}
-          fontSize={0.5}
-          color="#e2e8f0"
-          anchorX="center"
-          anchorY="bottom"
-          outlineWidth={0.02}
-          outlineColor="#000000"
-        >
-          {node.fileNode.name}
-        </Text>
+        <Billboard position={[0, node.height / 2 + 0.8, 0]}>
+          <Text
+            fontSize={0.5}
+            color="#e2e8f0"
+            anchorX="center"
+            anchorY="bottom"
+            outlineWidth={0.02}
+            outlineColor="#000000"
+          >
+            {node.fileNode.name}
+          </Text>
+        </Billboard>
       )}
 
       {/* Complexity indicator - glowing top for complex files */}

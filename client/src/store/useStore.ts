@@ -55,6 +55,9 @@ interface AppState {
   branches: string[];
   branchesLoaded: boolean;
 
+  // Repo loading
+  repoLoading: { active: boolean; progress: string };
+
   // UI state
   selectedBuilding: LayoutNode | null;
   hoveredBuilding: LayoutNode | null;
@@ -63,8 +66,7 @@ interface AppState {
   searchQuery: string;
   searchResults: LayoutNode[];
   cameraAnimation: {
-    endPosition: [number, number, number];
-    endTarget: [number, number, number];
+    building: LayoutNode;
   } | null;
 
   // Code preview state
@@ -79,6 +81,7 @@ interface AppState {
   toggleEdges: () => void;
   toggleLabels: () => void;
   search: (query: string) => void;
+  setRepoLoading: (active: boolean, progress?: string) => void;
   flyTo: (building: LayoutNode) => void;
   cancelCameraAnimation: () => void;
   setCodePreviewMode: (mode: "closed" | "normal" | "full") => void;
@@ -117,6 +120,8 @@ export const useStore = create<AppState>((set, get) => ({
     isLoading: false,
   },
   buildingStates: new Map(),
+
+  repoLoading: { active: false, progress: "" },
 
   selectedBuilding: null,
   hoveredBuilding: null,
@@ -265,6 +270,8 @@ export const useStore = create<AppState>((set, get) => ({
   hoverBuilding: (building) => set({ hoveredBuilding: building }),
   toggleEdges: () => set((s) => ({ showEdges: !s.showEdges })),
   toggleLabels: () => set((s) => ({ showLabels: !s.showLabels })),
+  setRepoLoading: (active, progress) =>
+    set({ repoLoading: { active, progress: progress || "" } }),
   setCodePreviewMode: (mode) => set({ codePreviewMode: mode }),
 
   search: (query) => {
@@ -286,17 +293,9 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   flyTo: (building) => {
-    const viewDistance = Math.max(building.height * 2, 10);
     get().selectBuilding(building);
     set({
-      cameraAnimation: {
-        endPosition: [
-          building.x + viewDistance * 0.5,
-          building.height * 0.5 + viewDistance * 0.4,
-          building.z + viewDistance * 0.5,
-        ],
-        endTarget: [building.x, building.height * 0.3, building.z],
-      },
+      cameraAnimation: { building },
     });
   },
 

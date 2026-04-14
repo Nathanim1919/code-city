@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CityScene } from "./components/CityScene";
+import { LoadingCity } from "./components/LoadingCity";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
 import { Timeline } from "./components/Timeline";
@@ -12,6 +13,7 @@ export default function App() {
   const cityLayout = useStore((s) => s.cityLayout);
   const codePreviewMode = useStore((s) => s.codePreviewMode);
   const repoInfo = useStore((s) => s.repoInfo);
+  const repoLoading = useStore((s) => s.repoLoading);
   const loadSampleProject = useStore((s) => s.loadSampleProject);
   const loadFiles = useStore((s) => s.loadFiles);
   const setRepoInfo = useStore((s) => s.setRepoInfo);
@@ -90,10 +92,16 @@ export default function App() {
 
       {codePreviewMode !== "full" && (
         <div className="main">
-          <SearchBar />
-          <CanvasToolbar />
-          <CityScene />
-          <Timeline />
+          {repoLoading.active ? (
+            <LoadingCity />
+          ) : (
+            <>
+              <SearchBar />
+              <CanvasToolbar />
+              <CityScene />
+              <Timeline />
+            </>
+          )}
         </div>
       )}
 

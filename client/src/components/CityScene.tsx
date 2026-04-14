@@ -35,6 +35,7 @@ interface AnimState {
 function CameraAnimator({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsType | null> }) {
   const animRef = useRef<AnimState | null>(null);
   const lastAnimId = useRef<object | null>(null);
+  const animStartTime = useRef(0);
 
   useFrame((state, delta) => {
     const storeAnim = useStore.getState().cameraAnimation;
@@ -43,25 +44,46 @@ function CameraAnimator({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
 
     // Detect new animation trigger
     if (storeAnim && storeAnim !== lastAnimId.current) {
+      animStartTime.current = performance.now();
       lastAnimId.current = storeAnim;
       const camera = state.camera;
+      const b = storeAnim.building;
       const startPos: [number, number, number] = [camera.position.x, camera.position.y, camera.position.z];
       const startTgt: [number, number, number] = [controls.target.x, controls.target.y, controls.target.z];
 
-      const dx = storeAnim.endPosition[0] - startPos[0];
-      const dy = storeAnim.endPosition[1] - startPos[1];
-      const dz = storeAnim.endPosition[2] - startPos[2];
+      // Compute end position: approach from camera's current horizontal direction
+      const viewDistance = Math.max(b.height * 2, 10);
+      let dirX = camera.position.x - b.x;
+      let dirZ = camera.position.z - b.z;
+      const dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
+      if (dirLen > 0.01) {
+        dirX /= dirLen;
+        dirZ /= dirLen;
+      } else {
+        // Camera is directly above building, pick a default direction
+        dirX = 0.707;
+        dirZ = 0.707;
+      }
+
+      const endPosition: [number, number, number] = [
+        b.x + dirX * viewDistance * 0.7,
+        b.height * 0.5 + viewDistance * 0.4,
+        b.z + dirZ * viewDistance * 0.7,
+      ];
+      const endTarget: [number, number, number] = [b.x, b.height * 0.3, b.z];
+
+      const dx = endPosition[0] - startPos[0];
+      const dy = endPosition[1] - startPos[1];
+      const dz = endPosition[2] - startPos[2];
       const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-      const hdx = storeAnim.endPosition[0] - startPos[0];
-      const hdz = storeAnim.endPosition[2] - startPos[2];
-      const horizontalDist = Math.sqrt(hdx * hdx + hdz * hdz);
+      const horizontalDist = Math.sqrt(dx * dx + dz * dz);
 
       animRef.current = {
         startPosition: startPos,
         startTarget: startTgt,
-        endPosition: storeAnim.endPosition,
-        endTarget: storeAnim.endTarget,
+        endPosition,
+        endTarget,
         progress: 0,
         duration: Math.min(2.2, Math.max(0.6, distance * 0.035)),
         arcHeight: Math.min(25, Math.max(3, horizontalDist * 0.3)),
@@ -105,7 +127,8 @@ function CameraAnimator({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
     if (!controls) return;
 
     const handleStart = () => {
-      if (animRef.current) {
+      // Ignore the initial click/pointer event that triggered the animation
+      if (animRef.current && performance.now() - animStartTime.current > 150) {
         animRef.current = null;
         lastAnimId.current = null;
         useStore.setState({ cameraAnimation: null });
