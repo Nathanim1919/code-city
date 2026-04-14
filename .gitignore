@@ -8,7 +8,6 @@ build/
 
 # Environment variables
 .env.*.local
-.env
 
 # Vite
 .vite/
@@ -21,7 +20,6 @@ drizzle/meta/
 Thumbs.db
 
 # Editor / IDE
-.vscode/
 
 .idea/
 *.swp
